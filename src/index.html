@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aditya Charity Blockchain</title>
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/truffle-contract/4.0.31/truffle-contract.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    
+    <style>
+      body {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        font-family: 'Open Sans', sans-serif;
+        color: white;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .navbar {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+      }
+      .container {
+        padding-top: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+        padding: 30px;
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+        margin-bottom: 20px;
+      }
+      .form-control {
+        border-radius: 25px;
+        padding: 10px;
+        border: none;
+        transition: 0.3s;
+      }
+      .form-control:focus {
+        box-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
+        outline: none;
+      }
+      .btn-primary, .btn-success {
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        font-weight: bold;
+      }
+      .btn-primary:hover, .btn-success:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 0px 15px rgba(255, 107, 107, 0.5);
+      }
+      .icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+        animation: fadeInDown 1s;
+      }
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .marquee {
+        font-weight: bold;
+        color: #444;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .modal-content {
+        background-color: #fff;
+        color: #000;
+      }
+      #metamask-warning, #network-warning {
+        background: rgba(255, 0, 0, 0.1);
+        border: 2px solid rgba(255, 0, 0, 0.3);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        max-width: 600px;
+        margin: 100px auto 0;
+        display: none;
+      }
+      .account-info {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 25px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .account-info i {
+        margin-right: 10px;
+        color: #4cd137;
+      }
+      .account-badge {
+        background: rgba(76, 209, 55, 0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+      }
+      .address-truncate {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .workflow-step {
+        position: relative;
+        margin-bottom: 30px;
+      }
+      .workflow-step::after {
+        content: '';
+        position: absolute;
+        width: 2px;
+        background-color: rgba(255, 255, 255, 0.3);
+        top: 100%;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .workflow-step:last-child::after {
+        display: none;
+      }
+      .status-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        z-index: 10;
+        font-size: 12px;
+        padding: 5px 10px;
+      }
+      .card-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+      }
+      .disabled-section {
+        opacity: 0.5;
+        pointer-events: none;
+        position: relative;
+      }
+      .disabled-section::after {
+        content: "Complete previous steps first";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        z-index: 10;
+      }
+      .completed {
+        background: rgba(40, 167, 69, 0.1);
+      }
+      .completed .form-control {
+        background-color: rgba(76, 209, 55, 0.1);
+        border: 1px solid rgba(76, 209, 55, 0.3);
+      }
+      .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+      .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+      }
+      .debug-info {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        text-align: left;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+      #mock-mode-warning {
+        background-color: rgba(255, 193, 7, 0.2);
+        border: 1px solid rgba(255, 193, 7, 0.5);
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // Check if the user is logged in
+      if (!localStorage.getItem('loggedIn')) {
+        window.location.href = 'login.html';
+      }
+
+      function logout() {
+        localStorage.removeItem('loggedIn');
+        localStorage.removeItem('charityName');
+        window.location.href = 'login.html';
+      }
+    </script>
+
+    <nav class="navbar navbar-dark fixed-top shadow p-3">
+      <a class="navbar-brand" href="http://adityakonda04.vercel.app/" target="_blank">Aditya | Charity Blockchain</a>
+      <ul class="navbar-nav px-3 d-flex flex-row">
+        <li class="nav-item text-nowrap mr-3">
+          <small class="nav-link">Welcome, <span id="charityName"></span></small>
+        </li>
+        <li class="nav-item text-nowrap">
+          <button class="btn btn-danger" onClick="logout()">Logout</button>
+        </li>
+      </ul>
+    </nav>
+    
+    <!-- MetaMask Warning -->
+    <div id="metamask-warning" class="text-center">
+      <i class="fas fa-exclamation-triangle fa-4x mb-3" style="color: #ff6b6b;"></i>
+      <h3>MetaMask Connection Required</h3>
+      <p class="mb-4">You need to connect to MetaMask to use this application. Please connect your wallet to proceed.</p>
+      <button class="btn btn-warning btn-lg" onclick="App.connectToMetaMask()">
+        <i class="fas fa-wallet mr-2"></i> Connect to MetaMask
+      </button>
+    </div>
+    
+    <!-- Network Warning -->
+    <div id="network-warning" class="text-center">
+      <i class="fas fa-exclamation-triangle fa-4x mb-3" style="color: #ff6b6b;"></i>
+      <h3>Wrong Network Detected</h3>
+      <p class="mb-4">The smart contract for this application is not deployed on the current network. Please switch to the correct network to proceed.</p>
+      <button class="btn btn-warning btn-lg" onclick="App.switchNetwork()">
+        <i class="fas fa-exchange-alt mr-2"></i> Switch to Correct Network
+      </button>
+      <div class="debug-info mt-3">
+        <p>If you're running a local blockchain (like Ganache), make sure it's running and that you've deployed the contract to it.</p>
+        <p>Expected network: Ganache (Chain ID: 1337)</p>
+        <p>Current network ID: <span id="current-network-id">Unknown</span></p>
+      </div>
+    </div>
+    
+    <div id="main-content" class="container">
+      <div class="account-info w-100">
+        <div>
+          <i class="fas fa-circle"></i> Connected to MetaMask
+        </div>
+        <div class="d-flex align-items-center">
+          <span class="mr-3 address-truncate" id="connected-address">0x0000000000000000000000000000000000000000</span>
+          <span class="account-badge" id="account-balance">0 ETH</span>
+        </div>
+      </div>
+      
+      <!-- Mock Mode Warning -->
+      <div id="mock-mode-warning" class="w-100 text-center">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <strong>Demo Mode Active:</strong> The application is running in demo mode because the smart contract was not found. All transactions are simulated and not recorded on the blockchain.
+      </div>
+      
+      <!-- Charity Section -->
+      <div id="charity-section" class="card workflow-step">
+        <span class="badge badge-warning status-badge">Step 1</span>
+        <div class="card-body">
+          <div class="card-header">
+            <span class="step-number">1</span>
+            <h4 class="d-inline-block mb-0">Enter Charity Details</h4>
+          </div>
+        <i class="fas fa-hand-holding-heart icon"></i>
+          <form onSubmit="App.createCharity(); return false;">
+          <input id="charity_name" type="text" class="form-control mb-2" placeholder="Charity Name" required>
+          <input id="charity_desciption" type="text" class="form-control mb-2" placeholder="Charity Description" required>
+          <input id="charity_Account" type="text" class="form-control mb-2" placeholder="Bank Account" required>
+          <input id="charity_bankName" type="text" class="form-control mb-2" placeholder="Bank Name" required>
+          <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+        </div>
+      </div>
+	  
+      <!-- Organisation Section -->
+	  <div id="organisation-section" class="card workflow-step disabled-section">
+        <span class="badge badge-warning status-badge">Step 2</span>
+        <div class="card-body">
+          <div class="card-header">
+            <span class="step-number">2</span>
+            <h4 class="d-inline-block mb-0">Enter Organisation Details</h4>
+          </div>
+        <i class="fas fa-building icon"></i>
+          <form onSubmit="App.createOrganisation(); return false;">
+          <input id="organisation_name" type="text" class="form-control mb-2" placeholder="Organisation Name" required>
+          <input id="organisation_account" type="text" class="form-control mb-2" placeholder="Organisation Bank Account" required>
+          <input id="organisation_bankname" type="text" class="form-control mb-2" placeholder="Organisation Bank Name" required>
+          <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+        </div>
+      </div>
+      
+      <!-- Transaction Section -->
+      <div id="transaction-section" class="card workflow-step disabled-section">
+        <span class="badge badge-warning status-badge">Step 3</span>
+        <div class="card-body">
+          <div class="card-header">
+            <span class="step-number">3</span>
+            <h4 class="d-inline-block mb-0">Enter Transaction Details</h4>
+          </div>
+        <i class="fas fa-exchange-alt icon"></i>
+          <form onSubmit="App.createTransaction(); return false;">
+          <input id="add_of_charity" type="text" class="form-control mb-2" placeholder="Charity Address" required>
+          <input id="add_of_org" type="text" class="form-control mb-2" placeholder="Organisation Address" required>
+            <input id="amount" type="text" class="form-control mb-2" placeholder="Amount (ETH)" required>
+          <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+        </div>
+      </div>
+      
+      <!-- Blockchain Section -->
+      <div id="blockchain-section" class="card workflow-step disabled-section">
+        <span class="badge badge-warning status-badge">Step 4</span>
+        <div class="card-body">
+          <div class="card-header">
+            <span class="step-number">4</span>
+            <h4 class="d-inline-block mb-0">Mine Block & Get Certificate</h4>
+          </div>
+          <i class="fas fa-cube icon"></i>
+          <p class="mb-3">After completing all previous steps, you can mine a block to record your transaction permanently on the blockchain and receive a certificate.</p>
+          
+          <div class="blockchain-details p-3 mb-3" style="background: rgba(0,0,0,0.1); border-radius: 10px; text-align: left;">
+            <h5 class="mb-3 text-center">Transaction Details</h5>
+            <div class="row mb-2">
+              <div class="col-4 font-weight-bold">Organisation Address:</div>
+              <div class="col-8 content25 text-break">-</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-4 font-weight-bold">Charity Address:</div>
+              <div class="col-8 content26 text-break">-</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-4 font-weight-bold">Amount:</div>
+              <div class="col-8 content27">-</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-4 font-weight-bold">Transaction Hash:</div>
+              <div class="col-8 content28 text-break">-</div>
+            </div>
+          </div>
+          
+          <button type="button" class="btn btn-success btn-block" onClick="App.blockchain_function();">Mine Block</button>
+        </div>
+      </div>
+    </div>
+    
+      <!-- Hidden templates for rendering blockchain data -->
+      <div class="taskTemplate" style="display: none;">
+        <div class="content1"></div>
+        <div class="content2"></div>
+        <div class="content3"></div>
+        <div class="content4"></div>
+        <div class="content5"></div>
+        <div class="content6"></div>
+        <div class="content15"></div>
+        <div class="content17"></div>
+        <div class="content18"></div>
+      </div>
+      
+      <div class="organisation_for_html" style="display: none;">
+        <div class="content9"></div>
+        <div class="content10"></div>
+        <div class="content11"></div>
+        <div class="content12"></div>
+        <div class="content13"></div>
+        <div class="content14"></div>
+        <div class="content16"></div>
+        <div class="content19"></div>
+      </div>
+      
+      <div class="transaction" style="display: none;">
+        <div class="content20"></div>
+        <div class="content21"></div>
+        <div class="content22"></div>
+        <div class="content23"></div>
+        <div class="content24"></div>
+      </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">Success</h5>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">Operation completed successfully!</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="downloadCertificate" style="display: none;">Download Certificate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">Error</h5>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">An error occurred.</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Info Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title">Information</h5>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">Information message</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Confirm Action</h5>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">Are you sure you want to proceed?</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmYesBtn">Yes, Proceed</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-body text-center p-5">
+            <div class="spinner-border loading-spinner text-primary mb-3" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+            <h5 class="loading-message">Processing...</h5>
+            <p class="text-muted mt-2">Please wait while we process your request. This may take a moment.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const charityName = localStorage.getItem('charityName');
+        document.getElementById('charityName').textContent = charityName;
+        
+        // Display network ID for debugging
+        if (typeof web3 !== 'undefined') {
+          web3.eth.net.getId().then(function(networkId) {
+            document.getElementById('current-network-id').textContent = networkId;
+          });
+        }
+      });
+
+      function generateCertificate(orgAddress, charityAddress, amount) {
+        const { jsPDF } = window.jspdf;
+        
+        // Create a new PDF with a landscape orientation for a more certificate-like look
+        const doc = new jsPDF({
+          orientation: 'landscape',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const charityName = $('#charity_name').val();
+        const charityDescription = $('#charity_desciption').val();
+        const charityAccount = $('#charity_Account').val();
+        const charityBankName = $('#charity_bankName').val();
+
+        const organisationName = $('#organisation_name').val();
+        const organisationAccount = $('#organisation_account').val();
+        const organisationBankName = $('#organisation_bankname').val();
+
+        const date = new Date();
+        const dateString = date.toLocaleString();
+        const certificateId = Date.now().toString();
+        const transactionHash = App.transactionHash || "0x" + Math.random().toString(16).substring(2, 66);
+
+        // Add fancy border
+        doc.setDrawColor(0, 48, 143); // Dark blue
+        doc.setLineWidth(1.5);
+        doc.roundedRect(5, 5, 287, 200, 3, 3); // Outer border
+        
+        doc.setDrawColor(0, 91, 187); // Medium blue
+        doc.setLineWidth(0.75);
+        doc.roundedRect(10, 10, 277, 190, 3, 3); // Inner border
+        
+        // Add decorative corners
+        doc.setFillColor(0, 48, 143); // Dark blue
+        doc.circle(5, 5, 5, 'F'); // Top left
+        doc.circle(292, 5, 5, 'F'); // Top right
+        doc.circle(5, 205, 5, 'F'); // Bottom left
+        doc.circle(292, 205, 5, 'F'); // Bottom right
+        
+        // Add background pattern
+        doc.setFillColor(240, 240, 255); // Very light blue
+        doc.roundedRect(15, 15, 267, 180, 3, 3, 'F');
+        
+        // Add watermark
+        doc.setTextColor(245, 245, 255);
+        doc.setFontSize(80);
+        doc.setFont('helvetica', 'bold');
+        doc.text('CHARITY', 150, 110, { align: 'center', angle: 45 });
+        
+        // Add logo
+        const logoUrl = 'https://i.ibb.co/qFLTZSLy/aditya.png'; // Replace with your logo URL
+        const img = new Image();
+        img.src = logoUrl;
+        img.onload = function () {
+          doc.addImage(img, 'PNG', 20, 20, 30, 30);
+
+          // Add certificate title
+          doc.setTextColor(0, 48, 143); // Dark blue
+          doc.setFontSize(30);
+          doc.setFont('helvetica', 'bold');
+          doc.text('BLOCKCHAIN CHARITY CERTIFICATE', 150, 30, { align: 'center' });
+          
+          // Add decorative line
+          doc.setDrawColor(0, 48, 143); // Dark blue
+          doc.setLineWidth(1);
+          doc.line(50, 35, 250, 35);
+          
+          // Add certificate number and date
+          doc.setTextColor(100, 100, 100); // Gray
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'italic');
+          doc.text(`Certificate #${certificateId.substring(0, 8)}`, 150, 42, { align: 'center' });
+          doc.text(`Issued on: ${dateString}`, 150, 48, { align: 'center' });
+          
+          // Add main content
+          doc.setTextColor(0, 0, 0); // Black
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'normal');
+          
+          // Add certificate text
+          doc.setFontSize(14);
+          doc.text('This certificate confirms that', 150, 60, { align: 'center' });
+          
+          doc.setFontSize(18);
+          doc.setFont('helvetica', 'bold');
+          doc.text(organisationName, 150, 70, { align: 'center' });
+          
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'normal');
+          doc.text('has successfully donated', 150, 80, { align: 'center' });
+          
+          doc.setFontSize(18);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${amount} ETH`, 150, 90, { align: 'center' });
+          
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'normal');
+          doc.text('to', 150, 100, { align: 'center' });
+          
+          doc.setFontSize(18);
+          doc.setFont('helvetica', 'bold');
+          doc.text(charityName, 150, 110, { align: 'center' });
+          
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'italic');
+          doc.text(`"${charityDescription}"`, 150, 120, { align: 'center' });
+          
+          // Add transaction details
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          
+          // Left column
+          let y = 135;
+          doc.setFont('helvetica', 'bold');
+          doc.text('CHARITY DETAILS', 60, y);
+          doc.setFont('helvetica', 'normal');
+          y += 7;
+          doc.text(`Name: ${charityName}`, 60, y);
+          y += 7;
+          doc.text(`Bank Account: ${charityAccount}`, 60, y);
+          y += 7;
+          doc.text(`Bank Name: ${charityBankName}`, 60, y);
+          y += 7;
+          doc.text(`Address: ${charityAddress}`, 60, y);
+          
+          // Right column
+          y = 135;
+          doc.setFont('helvetica', 'bold');
+          doc.text('ORGANISATION DETAILS', 180, y);
+          doc.setFont('helvetica', 'normal');
+          y += 7;
+          doc.text(`Name: ${organisationName}`, 180, y);
+          y += 7;
+          doc.text(`Bank Account: ${organisationAccount}`, 180, y);
+          y += 7;
+          doc.text(`Bank Name: ${organisationBankName}`, 180, y);
+          y += 7;
+          doc.text(`Address: ${orgAddress}`, 180, y);
+          
+          // Add blockchain verification
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text('BLOCKCHAIN VERIFICATION', 150, 175, { align: 'center' });
+          doc.setFont('helvetica', 'normal');
+          doc.text(`Transaction Hash: ${transactionHash}`, 150, 182, { align: 'center' });
+          doc.text('This donation has been permanently recorded on the Ethereum blockchain', 150, 189, { align: 'center' });
+          
+          // Add footer
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100); // Gray
+          doc.text('This certificate is generated by Aditya Charity Blockchain Platform', 150, 200, { align: 'center' });
+          doc.text('Verified and secured by Ethereum Blockchain', 150, 204, { align: 'center' });
+
+          // Add QR code-like element (simulated)
+          doc.setFillColor(0, 0, 0);
+          doc.roundedRect(250, 20, 30, 30, 2, 2, 'F');
+          doc.setFillColor(255, 255, 255);
+          for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+              if (Math.random() > 0.5) {
+                doc.rect(250 + i*6, 20 + j*6, 6, 6, 'F');
+              }
+            }
+          }
+
+          document.getElementById('downloadCertificate').addEventListener('click', function () {
+            doc.save('charity_certificate.pdf');
+          });
+        };
+      }
+    </script>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script src="new_app.js"></script>
+  </body>
+</html>
