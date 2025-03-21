@@ -410,11 +410,11 @@ App = {
     App._lastTransaction = null
     
     // Show a warning that we're in mock mode
-    $('#mock-mode-warning').html(`
-      <i class="fas fa-exclamation-triangle mr-2"></i>
-      <strong>Demo Mode Active:</strong> The application is running in demo mode because the smart contract was not found. 
-      MetaMask will still open for transactions, but they will be simulated and not recorded on the blockchain.
-    `).show();
+    // $('#mock-mode-warning').html(`
+    //   <i class="fas fa-exclamation-triangle mr-2"></i>
+    //   <strong>Demo Mode Active:</strong> The application is running in demo mode because the smart contract was not found. 
+    //   MetaMask will still open for transactions, but they will be simulated and not recorded on the blockchain.
+    // `).show();
   },
   
   checkExistingEntities: async () => {

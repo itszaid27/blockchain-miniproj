@@ -10,7 +10,7 @@
     "dev": "lite-server",
     "test": "echo \"Error: no test specified\" && sexit 1"
   },
-  "author": "adityakonda04@gmail.com",
+  "author": "FAMZkonda04@gmail.com",
   "devDependencies": {
     "bootstrap": "4.5.0",
     "chai": "^4.1.2",
@@ -18,7 +18,6 @@
     "chai-bignumber": "^2.0.2",
     "lite-server": "^2.3.0",
     "nodemon": "^1.17.3",
-    "truffle": "5.0.2",
     "truffle-contract": "3.0.6"
   },
   "dependencies": {
